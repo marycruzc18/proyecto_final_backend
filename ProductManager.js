@@ -1,4 +1,4 @@
-const fs = require('fs');
+import { promises as fsPromises } from 'fs';
 
 class ProductManager {
     constructor(path) {
@@ -49,7 +49,7 @@ class ProductManager {
 
     async loadProducts() {
         try {
-            const data = await fs.promises.readFile(this.path, 'utf-8');
+            const data = await fsPromises.readFile(this.path, 'utf-8');
             return JSON.parse(data) || [];
         } catch (error) {
             return [];
@@ -57,7 +57,7 @@ class ProductManager {
     }
 
     async saveProducts(products) {
-        await fs.promises.writeFile(this.path, JSON.stringify(products, null, 2));
+        await fsPromises.writeFile(this.path, JSON.stringify(products, null, 2));
     }
 
     generateNextId(products) {
@@ -66,56 +66,5 @@ class ProductManager {
     }
 }
 
-// Casos de uso:
-const productManager = new ProductManager('productos.json');
-
-(async () => {
-    await productManager.addProduct({
-        title: 'Zarcillo',
-        description: 'Zarcillo Dorado',
-        price: 1.099,
-        thumbnail: 'sin imagen',
-        code: 5654,
-        stock: 300,
-    });
-
-    await productManager.addProduct({
-        title: 'Cadena',
-        description: 'Cadena',
-        price: 1.500,
-        thumbnail: 'sin imagen',
-        code: 5653,
-        stock: 30,
-    });
-
-    const products = await productManager.getProducts();
-    console.log('Lista de productos:');
-    console.log(products);
-
-    const productId = 1;
-    const product = await productManager.getProductById(productId);
-    if (product) {
-        console.log(`Producto con ID ${productId}:`);
-        console.log(product);
-
-        const updatedProduct = {
-            title: 'Zarcillo',
-            description: 'Zaecillo Dorado',
-            price: 1.299,
-            thumbnail: 'imagen1_actualizada.jpg',
-            code: 5654,
-            stock: 90,
-        };
-
-        await productManager.updateProduct(productId, updatedProduct);
-        console.log(`Producto con ID ${productId} actualizado:`);
-        console.log(await productManager.getProductById(productId));
-
-        await productManager.deleteProduct(productId);
-        console.log(`Producto con ID ${productId} eliminado:`);
-        console.log(await productManager.getProducts());
-    } else {
-        console.error(`Producto con ID ${productId} no encontrado.`);
-    }
-})();
+export default ProductManager;
 
