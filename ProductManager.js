@@ -1,61 +1,121 @@
+const fs = require('fs');
+
 class ProductManager {
-    constructor() {
-        this.products = [];
-        this.nextId = 1;
+    constructor(path) {
+        this.path = path;
     }
 
-    addProduct(title, description, price, thumbnail, code, stock) {
-        if (!title || !description || !price || !thumbnail || !code || !stock) {
-            console.error("Todos los campos son obligatorios.");
-            return;
-        }
-
-        if (this.products.some(product => product.code === code)) {
-            console.error("Ya existe un producto con el mismo código.");
-            return;
-        }
-
-        const product = {
-            id: this.nextId++,
-            title,
-            description,
-            price,
-            thumbnail,
-            code,
-            stock,
-        };
-
-        this.products.push(product);
-        console.log(`Producto agregado con ID ${product.id}`);
+    async addProduct(product) {
+        const products = await this.loadProducts();
+        product.id = this.generateNextId(products);
+        products.push(product);
+        await this.saveProducts(products);
+        return product.id;
     }
 
-    getProducts() {
-        return this.products;
+    async getProducts() {
+        const products = await this.loadProducts();
+        return products;
     }
 
-    getProductById(id) {
-        const product = this.products.find(product => product.id === id);
-        if (product) {
-            return product;
-        } else {
-            console.error("Producto no encontrado.");
+    async getProductById(id) {
+        const products = await this.loadProducts();
+        const product = products.find(p => p.id === id);
+        return product;
+    }
+
+    async updateProduct(id, updatedProduct) {
+        const products = await this.loadProducts();
+        const index = products.findIndex(p => p.id === id);
+        if (index !== -1) {
+            updatedProduct.id = id;
+            products[index] = updatedProduct;
+            await this.saveProducts(products);
+            return true;
         }
+        return false;
+    }
+
+    async deleteProduct(id) {
+        const products = await this.loadProducts();
+        const index = products.findIndex(p => p.id === id);
+        if (index !== -1) {
+            products.splice(index, 1);
+            await this.saveProducts(products);
+            return true;
+        }
+        return false;
+    }
+
+    async loadProducts() {
+        try {
+            const data = await fs.promises.readFile(this.path, 'utf-8');
+            return JSON.parse(data) || [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    async saveProducts(products) {
+        await fs.promises.writeFile(this.path, JSON.stringify(products, null, 2));
+    }
+
+    generateNextId(products) {
+        const maxId = products.reduce((max, product) => (product.id > max ? product.id : max), 0);
+        return maxId + 1;
     }
 }
 
 // Casos de uso:
-const manager = new ProductManager();
+const productManager = new ProductManager('productos.json');
 
-manager.addProduct("Zarcillos", "Zarcillos Estrella", 1.200, "imagen1.jpg", 5456, 100);
-manager.addProduct("Cadena", "Cadena trenzada", 3.000, "imagen2.jpg", 4353, 50);
+(async () => {
+    await productManager.addProduct({
+        title: 'Zarcillo',
+        description: 'Zarcillo Dorado',
+        price: 1.099,
+        thumbnail: 'sin imagen',
+        code: 5654,
+        stock: 300,
+    });
 
-console.log("Lista de productos:");
-console.log(manager.getProducts());
+    await productManager.addProduct({
+        title: 'Cadena',
+        description: 'Cadena',
+        price: 1.500,
+        thumbnail: 'sin imagen',
+        code: 5653,
+        stock: 30,
+    });
 
-const product = manager.getProductById(5);
-if (product) {
-    console.log("Producto encontrado:");
-    console.log(product);
-}
+    const products = await productManager.getProducts();
+    console.log('Lista de productos:');
+    console.log(products);
 
-manager.addProduct("Zarcillos", "Zarcillos Estrella", 1.200, "imagen1.jpg", 5456, 100); // Introducir un código duplicado para probar la validación
+    const productId = 1;
+    const product = await productManager.getProductById(productId);
+    if (product) {
+        console.log(`Producto con ID ${productId}:`);
+        console.log(product);
+
+        const updatedProduct = {
+            title: 'Zarcillo',
+            description: 'Zaecillo Dorado',
+            price: 1.299,
+            thumbnail: 'imagen1_actualizada.jpg',
+            code: 5654,
+            stock: 90,
+        };
+
+        await productManager.updateProduct(productId, updatedProduct);
+        console.log(`Producto con ID ${productId} actualizado:`);
+        console.log(await productManager.getProductById(productId));
+
+        await productManager.deleteProduct(productId);
+        console.log(`Producto con ID ${productId} eliminado:`);
+        console.log(await productManager.getProducts());
+    } else {
+        console.error(`Producto con ID ${productId} no encontrado.`);
+    }
+})();
+
