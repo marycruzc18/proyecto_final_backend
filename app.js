@@ -1,28 +1,20 @@
 import express from 'express';
-import bodyParser from 'body-parser';
-import ProductManager from './ProductManager.js'; 
+import productsRouter from './src/routes/products.routes.js'
+import cartsRouter from './src/routes/carts.routes.js'
 
 const app = express();
-const port = 3000;
-const productManager = new ProductManager('productos.json');
+const port = 8080;
 
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({extended:true}))
 
-app.get('/products', async (req, res) => {
-    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
-    const products = await productManager.getProducts(limit);
-    res.json(products);
-});
 
-app.get('/products/:pid', async (req, res) => {
-    const productId = parseInt(req.params.pid);
-    const product = await productManager.getProductById(productId);
-    if (product) {
-        res.json(product);
-    } else {
-        res.status(404).json({ error: 'Producto no encontrado' });
-    }
-});
+// Rutas para productos
+app.use('/', productsRouter);
+
+// Rutas para carritos
+app.use('/', cartsRouter);
+
 
 app.listen(port, () => {
     console.log(`Servidor Express escuchando en el puerto ${port}`);

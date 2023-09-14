@@ -20,13 +20,13 @@ class ProductManager {
 
     async getProductById(id) {
         const products = await this.loadProducts();
-        const product = products.find(p => p.id === id);
+        const product = products.find(product => product.id === parseInt(id));
         return product;
     }
 
     async updateProduct(id, updatedProduct) {
         const products = await this.loadProducts();
-        const index = products.findIndex(p => p.id === id);
+        const index = products.findIndex(product => product.id === parseInt(id));
         if (index !== -1) {
             updatedProduct.id = id;
             products[index] = updatedProduct;
@@ -38,7 +38,7 @@ class ProductManager {
 
     async deleteProduct(id) {
         const products = await this.loadProducts();
-        const index = products.findIndex(p => p.id === id);
+        const index = products.findIndex(product => product.id === parseInt(id));
         if (index !== -1) {
             products.splice(index, 1);
             await this.saveProducts(products);
