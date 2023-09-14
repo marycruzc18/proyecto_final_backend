@@ -1,11 +1,57 @@
 [
   {
     "title": "Cadena",
-    "description": "Cadena",
-    "price": 1.5,
-    "thumbnail": "sin imagen",
-    "code": 5653,
-    "stock": 30,
+    "description": "Cadena Grande",
+    "price": 2500,
+    "thumbnail": "sin foto",
+    "code": 5270,
+    "stock": 120,
+    "status": "true",
+    "category": "cadena",
     "id": 2
+  },
+  {
+    "title": "Zarcillos",
+    "description": "Zarcillos Estrella",
+    "price": 2500,
+    "thumbnail": "sin foto",
+    "code": 5330,
+    "stock": 100,
+    "status": "true",
+    "category": "zarcillos",
+    "id": 3
+  },
+  {
+    "title": "Anillo",
+    "description": "Anillo estilo princesa",
+    "price": 2000,
+    "thumbnail": "sin foto",
+    "code": 5233,
+    "stock": 20,
+    "status": "true",
+    "category": "anillos",
+    "id": 4
+  },
+  {
+    "title": "Anillo",
+    "description": "Anillo dorado",
+    "price": 2000,
+    "thumbnail": "sin foto",
+    "code": 5234,
+    "stock": 25,
+    "status": "true",
+    "category": "anillos",
+    "id": 5
+  },
+  {
+    "title": "Zarcillos",
+    "description": "Zarcillo dorado",
+    "price": 2600,
+    "thumbnail": "sin foto",
+    "code": 5236,
+    "stock": 50,
+    "status": "true",
+    "category": "zarcillos",
+    "id": 6
   }
 ]
