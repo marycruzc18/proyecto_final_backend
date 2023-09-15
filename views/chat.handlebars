@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+        <header class="bg-dark text-white p-3">
+        <h1>Bienvenidos al Ecommerce</h1> 
+        </header>
+
+        <div class="container-fluid">
+        <div class="chat-window">
+            <div class="chat-header">
+            
+            </div>
+
+            <div class="chat-body" id="chat-body">
+              
+            </div>
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Nombre de usuario">
+                <input type="text" id="message-input" placeholder="Escribe tu mensaje...">
+                <button id="send-button" class="btn btn-success">Enviar</button>
+            </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+    <script>
+        const socket = io('ws://localhost:3000');
+
+        socket.on('connect', () => { 
+            socket.on('server_confirm', (msg) => {
+                console.log('El servidor ha confirmado la conexión');
+            });
+
+            // Manejar el evento de recibir un mensaje
+            socket.on('receive_message', (messageData) => {
+                // Mostrar el mensaje en el chat-body
+                const chatBody = document.getElementById('chat-body');
+                chatBody.innerHTML += `<p><strong>${messageData.user}:</strong> ${messageData.message}</p>`;
+            });
+
+            // Manejar el evento del botón "Enviar"
+            const sendButton = document.getElementById('send-button');
+            sendButton.addEventListener('click', () => {
+                const userInput = document.getElementById('user-input').value;
+                const messageInput = document.getElementById('message-input').value;
+
+                // Enviar el mensaje al servidor
+                socket.emit('send_message', { user: userInput, message: messageInput });
+
+                // Limpiar el input de mensaje después de enviar
+                document.getElementById('message-input').value = '';
+            });
+        });
+    </script>
+</body>
+</html>
+

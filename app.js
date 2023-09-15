@@ -1,13 +1,25 @@
+
+import {} from 'dotenv/config'
+
 import http from 'http';
 import express from 'express';
 import { Server } from 'socket.io';
 import { __dirname } from './utils.js';
 import { engine } from 'express-handlebars';
+import mongoose from 'mongoose';
 import productsRouter from './routes/products.routes.js'
 import cartsRouter from './routes/carts.routes.js'
+import Message from './dao/models/messages.model.js'
+
+
+
+const PORT = parseInt(process.env.PORT) || 3000;
+const MONGOOSE_URL = process.env.MONGOOSE_URL;
 
 const app = express();
 const server = http.createServer(app);
+
+
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -16,15 +28,17 @@ const io = new Server(server, {
     }
 });
 
-const port = 3000;
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas para productos
 app.use('/', productsRouter(io));
 // Rutas para carritos
-app.use('/', cartsRouter); 
+app.use('/', cartsRouter); ;
+//Rutas para mensajes 
+app.get('/chat', (req, res) => {
+    res.render('chat');
+});
 
 app.use('/public', express.static(`${__dirname}/public`));
 
@@ -41,10 +55,34 @@ io.on('connection', (socket) => {
         io.emit('product_added', product);
     });
 
+    // Envío de mensaje 
+socket.on('send_message', async (messageData) => {
+    console.log(`Mensaje recibido de ${messageData.user}: ${messageData.message}`);
+
+    const message = new Message(messageData);
+    await message.save();
+
+    io.emit('receive_message', messageData);
 });
 
-server.listen(port, () => {
-    console.log(`Servidor Express escuchando en el puerto ${port}`);
+});
+
+
+  mongoose.connect('mongodb+srv://marycruz18:mcoderdb@cluster0.6ci8xpp.mongodb.net/ecommerce', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+
+
+// Maneja eventos de conexión y error
+mongoose.connection.on('connected', () => {
+    console.log('Conectado a MongoDB');
+  });
+
+
+server.listen(PORT, () => {
+    console.log(`Servidor Express escuchando en el puerto ${PORT}`);
 });
 
 
