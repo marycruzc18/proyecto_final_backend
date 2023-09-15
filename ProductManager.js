@@ -64,6 +64,19 @@ class ProductManager {
         const maxId = products.reduce((max, product) => (product.id > max ? product.id : max), 0);
         return maxId + 1;
     }
+
+    async getAllProducts() {
+        try {
+          const data = await fsPromises.readFile(this.path, 'utf-8');
+          const products = JSON.parse(data);
+          return products;
+        } catch (error) {
+          console.error('Error al obtener productos:', error);
+          throw error;
+        }
+      }
+      
+    
 }
 
 export default ProductManager;
