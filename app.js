@@ -13,6 +13,7 @@ import Message from './dao/models/messages.model.js'
 
 
 
+
 const PORT = parseInt(process.env.PORT) || 3000;
 const MONGOOSE_URL = process.env.MONGOOSE_URL;
 
@@ -40,6 +41,8 @@ app.get('/chat', (req, res) => {
     res.render('chat');
 });
 
+
+
 app.use('/public', express.static(`${__dirname}/public`));
 
 // Configuración de Handlebars
@@ -65,6 +68,14 @@ socket.on('send_message', async (messageData) => {
     io.emit('receive_message', messageData);
 });
 
+socket.on('new_product_in_cart', (product_id) => {
+   
+    console.log('Nuevo producto agregado al carrito:', product_id);
+
+    // Emitir un evento de confirmación si es necesario
+    socket.emit('product_added_to_cart', product_id);
+  });
+
 });
 
 
@@ -79,6 +90,7 @@ socket.on('send_message', async (messageData) => {
 mongoose.connection.on('connected', () => {
     console.log('Conectado a MongoDB');
   });
+
 
 
 server.listen(PORT, () => {
