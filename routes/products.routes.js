@@ -10,16 +10,48 @@ const productManager = new ProductManager('./productos.json');
 // Ruta para obtener todos los productos
 router.get('/api/products', async (req, res) => {
   try {
-    const products = await Product.find(); 
+    const { limit = 10, page = 1, sort, query } = req.query;
 
-    const { limit } = req.query;
-
-    if (limit) {
-      const limitedProducts = products.slice(0, parseInt(limit, 10));
-      res.json(limitedProducts);
-    } else {
-      res.json(products);
+    const filter = {};
+    if (query) {
+      filter.$or = [
+        { category: { $regex: query, $options: 'i' } }, 
+        { title: { $regex: query, $options: 'i' } },  
+      ];
     }
+
+    if (req.query.availability) {
+      filter.status = req.query.availability === 'true'; 
+    }
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: sort, 
+    };
+
+    // Realiza la consulta con paginación
+    const products = await Product.paginate(filter, options);
+
+    // Calcula información adicional para la paginación
+    const totalPages = Math.ceil(products.total / limit);
+    const prevPage = page > 1 ? page - 1 : null;
+    const nextPage = page < totalPages ? page + 1 : null;
+
+    const result = {
+      status: 'success',
+      payload: products.docs,
+      totalPages,
+      prevPage,
+      nextPage,
+      page: parseInt(page),
+      hasPrevPage: prevPage !== null,
+      hasNextPage: nextPage !== null,
+      prevLink: prevPage !== null ? `/products?page=${prevPage}` : null,
+      nextLink: nextPage !== null ? `/products?page=${nextPage}` : null,
+    };
+
+    res.status(200).json(result);
   } catch (error) {
     console.error('Error al obtener productos:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -125,6 +157,46 @@ router.get('/realtimeproducts', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener productos:', error);
     res.status(500).send('Error interno del servidor');
+  }
+});
+
+
+// Ruta para mostrar todos los productos con paginación
+router.get('/products', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10; 
+    const result = await Product.paginate({}, { page, limit });
+
+    const products = result.docs.map((product) => product.toObject());
+
+    const pages = [];
+    for (let i = 1; i <= result.totalPages; i++) {
+      const pageItem = {
+        number: i,
+        numberPgBar: i,
+        url: `/products?page=${i}`,
+      };
+      pages.push(pageItem);
+    }
+
+    res.render('products', {
+      response: {
+        products,
+        totalPages: result.totalPages,
+        prevPage: result.prevPage,
+        nextPage: result.nextPage,
+        page: result.page,
+        hasPrevPage: result.hasPrevPage,
+        hasNextPage: result.hasNextPage,
+        prevPageUrl: result.hasPrevPage ? `/products?page=${result.prevPage}` : null,
+        nextPageUrl: result.hasNextPage ? `/products?page=${result.nextPage}` : null,
+        pages,
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al obtener los productos');
   }
 });
 
