@@ -84,6 +84,17 @@ app.get('/chat', (req, res) => {
 app.use('/', loginRoutes);
 
 
+app.get('/auth/github', passport.authenticate('github'));
+app.get(
+  '/githubcallback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Redireccionar al usuario después de la autenticación exitosa
+    res.redirect('/products');
+  }
+);
+
+
 app.use('/public', express.static(`${__dirname}/public`));
 
 // Configuración de Handlebars

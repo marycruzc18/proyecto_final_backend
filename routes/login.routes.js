@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import User from '../dao/models/user.model.js'
 import bcrypt from 'bcrypt';
-
+import passport from 'passport'
+ 
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.post('/register', async (req, res) => {
     // Verificar si el usuario ya existe en la base de datos
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.redirect('/login'); // Redirige a la página de inicio de sesión si el usuario ya existe
+      return res.redirect('/login'); 
     }
 
     // Hash de la contraseña
@@ -80,5 +81,15 @@ router.get('/registersuccess', (req, res) => {
     });
   });
   
+
+  router.get('/auth/github', passport.authenticate('github'));
+
+router.get(
+  '/githubcallback',
+  passport.authenticate('github', {
+    successRedirect: '/products',
+    failureRedirect: '/login',
+  })
+);
 
   export default router;
