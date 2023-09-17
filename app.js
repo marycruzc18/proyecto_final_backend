@@ -10,12 +10,17 @@ import mongoose from 'mongoose';
 import productsRouter from './routes/products.routes.js'
 import cartsRouter from './routes/carts.routes.js'
 import Message from './dao/models/messages.model.js'
-
-
+import session from 'express-session'
+import MongoStore from 'connect-mongo';
+import passport from 'passport';
+import initializePassport from './passport/passport.js'
+import loginRoutes from './routes/login.routes.js'
 
 
 const PORT = parseInt(process.env.PORT) || 3000;
 const MONGOOSE_URL = process.env.MONGOOSE_URL;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
 
 const app = express();
 const server = http.createServer(app);
@@ -29,8 +34,42 @@ const io = new Server(server, {
     }
 });
 
+
+
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+
+const store = MongoStore.create({
+    mongoUrl: MONGOOSE_URL,
+    mongoOptions: {},
+    ttl: 30
+  });
+  
+  
+  
+  app.use(session({
+    store:store,
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized : false
+  }))
+
+  mongoose.connect(MONGOOSE_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => {
+    console.log('Conexión a MongoDB establecida correctamente');
+  }).catch((err) => {
+    console.error('Error al conectar a MongoDB:', err);
+  });
+  
+  initializePassport()
+  app.use(passport.initialize());
+  app.use(passport.session());
 
 // Rutas para productos
 app.use('/', productsRouter(io));
@@ -41,6 +80,8 @@ app.get('/chat', (req, res) => {
     res.render('chat');
 });
 
+//Ruta para login
+app.use('/', loginRoutes);
 
 
 app.use('/public', express.static(`${__dirname}/public`));
@@ -79,18 +120,7 @@ socket.on('new_product_in_cart', (product_id) => {
 });
 
 
-  mongoose.connect('mongodb+srv://marycruz18:mcoderdb@cluster0.6ci8xpp.mongodb.net/ecommerce', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-
-
-// Maneja eventos de conexión y error
-mongoose.connection.on('connected', () => {
-    console.log('Conectado a MongoDB');
-  });
-
+ 
 
 
 server.listen(PORT, () => {
@@ -98,6 +128,7 @@ server.listen(PORT, () => {
 });
 
 
+  
 
 
 
