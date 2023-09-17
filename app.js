@@ -15,6 +15,7 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import initializePassport from './passport/passport.js'
 import loginRoutes from './routes/login.routes.js'
+import bodyParser from 'body-parser';
 
 
 const PORT = parseInt(process.env.PORT) || 3000;
@@ -39,7 +40,7 @@ const io = new Server(server, {
 
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import User from '../dao/models/user.model.js'
 import bcrypt from 'bcrypt';
 import passport from 'passport'
+import isAuthenticated from '../middleware/authMiddleware.js'
  
 
 const router = Router();
@@ -53,33 +54,36 @@ router.get('/registersuccess', (req, res) => {
     res.render('login');
   });
   
-  router.post('/login', async (req, res) => {
+  router.post('/login', (req, res) => {
     const { email, password } = req.body;
   
-    // Verificar si el usuario existe en la base de datos
-    const user = await User.findOne({ email });
-  
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.redirect('/login');
+    try {
+     
+      res.redirect('/products');
+      
+      
+    } catch (error) {
+      console.error('Error en la ruta de inicio de sesión:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-  
-    
-    req.session.userId = user._id;
-    req.session.username = user.first_name; 
-    return res.redirect('/products');
   });
   
-  
+
   
   // Cerrar sesión
-  router.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error al cerrar sesión:', err);
-      }
-      res.redirect('/login');
-    });
+
+router.get('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Error al cerrar sesión:', err);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    
+    res.redirect('/login');
   });
+});
+
+  
   
 
   router.get('/auth/github', passport.authenticate('github'));
@@ -91,5 +95,14 @@ router.get(
     failureRedirect: '/login',
   })
 );
+
+
+
+router.get('/api/sessions/current', isAuthenticated, (req, res) => {
+  const currentUser = req.user;
+  res.status(200).json({ user: currentUser });
+});
+
+
 
   export default router;
