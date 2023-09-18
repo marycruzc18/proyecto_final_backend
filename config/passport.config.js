@@ -5,27 +5,38 @@ import User from '../dao/models/user.model.js';
 
 const initializePassport = () => {
   passport.use(
-    new LocalStrategy((username, password, done) => {
-      User.findOne({ username: username }, (err, user) => {
-        if (err) { return done(err); }
-        if (!user) { return done(null, false, { message: 'Usuario no encontrado' }); }
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        // Buscar el usuario por nombre de usuario o correo electrónico
+        const user = await UserModel.findOne({
+          $or: [{ username }, { email: username }],
+        }).exec();
 
-        // Compara la contraseña proporcionada con la almacenada en la base de datos
-        user.comparePassword(password, (passwordErr, isMatch) => {
-          if (passwordErr) { return done(passwordErr); }
-          if (!isMatch) {
-            return done(null, false, { message: 'Contraseña incorrecta' });
-          }
-          return done(null, user); 
-        });
-      });
+        // Si no se encuentra el usuario, indicar un error de autenticación
+        if (!user) {
+          return done(null, false, { message: 'Usuario no encontrado' });
+        }
+
+        // Verifico la contraseña
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        // Si la contraseña no coincide, indicar un error 
+        if (!passwordMatch) {
+          return done(null, false, { message: 'Contraseña incorrecta' });
+        }
+
+        // Autenticación exitosa, devolver el usuario
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
     })
   );
 
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-
+  
   passport.deserializeUser(async (id, done) => {
     try {
       const user = await User.findById(id);

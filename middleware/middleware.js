@@ -1,4 +1,4 @@
-// Importa el middleware isAdmin y las demás dependencias necesarias
+
 import express from 'express';
 import User from '../dao/models/user.model.js';
 
