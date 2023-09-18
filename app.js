@@ -13,9 +13,9 @@ import Message from './dao/models/messages.model.js'
 import session from 'express-session'
 import MongoStore from 'connect-mongo';
 import passport from 'passport';
-import initializePassport from './passport/passport.js'
+import initializePassport from './config/passport.config.js'
 import loginRoutes from './routes/login.routes.js'
-import bodyParser from 'body-parser';
+import flash from 'connect-flash';
 
 
 const PORT = parseInt(process.env.PORT) || 3000;
@@ -40,9 +40,9 @@ const io = new Server(server, {
 
 
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-
+app.use(flash());
 
 const store = MongoStore.create({
     mongoUrl: MONGOOSE_URL,
@@ -72,17 +72,18 @@ const store = MongoStore.create({
   app.use(passport.initialize());
   app.use(passport.session());
 
+  
+
 // Rutas para productos
-app.use('/', productsRouter(io));
+app.use('/', productsRouter);
 // Rutas para carritos
 app.use('/', cartsRouter); ;
 //Rutas para mensajes 
 app.get('/chat', (req, res) => {
     res.render('chat');
 });
-
-//Ruta para login
 app.use('/', loginRoutes);
+
 
 
 app.get('/auth/github', passport.authenticate('github'));
@@ -139,8 +140,4 @@ server.listen(PORT, () => {
     console.log(`Servidor Express escuchando en el puerto ${PORT}`);
 });
 
-
-  
-
-
-
+export { io };
